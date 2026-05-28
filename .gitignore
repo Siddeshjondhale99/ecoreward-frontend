@@ -1,0 +1,16 @@
+# Flutter/Dart build artifacts
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+
+# Local Java JDK (large files)
+jdk17/
+jdk17.zip
+
+# IDEs and OS files
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
