@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:video_player/video_player.dart';
 import 'auth_provider.dart';
 import '../../core/routes.dart';
 import '../../core/theme.dart';
@@ -12,63 +14,125 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
+class _SplashScreenState extends State<SplashScreen> {
+  late VideoPlayerController _videoController;
+  bool _isControllerInitialized = false;
+  bool _isVideoFinished = false;
+  bool _isAuthChecked = false;
+  bool _loggedIn = false;
+  bool _isNavigated = false;
+  Timer? _fallbackTimer;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeIn,
-      ),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeOutBack,
-      ),
-    );
-
-    _controller.forward();
-    _navigateToNext();
+    _initializeVideo();
+    _checkAuth();
+    
+    // Safety fallback: if video player fails to load or notify end,
+    // force navigation after 8 seconds (if auth has already finished checking).
+    _fallbackTimer = Timer(const Duration(seconds: 8), () {
+      if (mounted && !_isNavigated) {
+        debugPrint("Splash screen: Fallback timeout reached. Forcing transition.");
+        _isVideoFinished = true;
+        if (_isAuthChecked) {
+          _navigateToNext();
+        }
+      }
+    });
   }
 
-  Future<void> _navigateToNext() async {
-    final startTime = DateTime.now();
+  Future<void> _initializeVideo() async {
+    _videoController = VideoPlayerController.asset('assets/images/splash_screen.mp4');
     
-    // Check if token exists and fetch profile in parallel
+    try {
+      await _videoController.initialize();
+      if (!mounted) return;
+
+      _videoController.setVolume(0.0); // Mute sound for splash screen
+      _videoController.setLooping(false);
+      
+      _videoController.addListener(() {
+        if (!mounted) return;
+        final position = _videoController.value.position;
+        final duration = _videoController.value.duration;
+        
+        // When video reaches completion
+        if (position >= duration && position > Duration.zero) {
+          _onVideoFinished();
+        }
+      });
+
+      setState(() {
+        _isControllerInitialized = true;
+      });
+
+      // Start playing the video
+      await _videoController.play();
+    } catch (e) {
+      debugPrint("Error initializing video splash: $e");
+      // If video player fails, mark video as finished to bypass it
+      _onVideoFinished();
+    }
+  }
+
+  Future<void> _checkAuth() async {
     final authProvider = context.read<AuthProvider>();
     final hasToken = await ApiService().getToken() != null;
-    bool loggedIn = false;
     
     if (hasToken) {
       try {
-        loggedIn = await authProvider.fetchProfile();
-      } catch (_) {
-        loggedIn = false;
+        _loggedIn = await authProvider.fetchProfile();
+      } catch (e) {
+        debugPrint("Error checking auth profile: $e");
+        _loggedIn = false;
       }
+    } else {
+      _loggedIn = false;
     }
-    
-    // Ensure we show the animation for at least 1 second (1000 ms)
-    final elapsed = DateTime.now().difference(startTime);
-    final remainingDelay = const Duration(milliseconds: 1000) - elapsed;
-    if (remainingDelay > Duration.zero) {
-      await Future.delayed(remainingDelay);
-    }
-    
+
     if (!mounted) return;
+
+    setState(() {
+      _isAuthChecked = true;
+    });
+
+    // If video is already finished or failed, navigate immediately
+    if (_isVideoFinished) {
+      _navigateToNext();
+    }
+  }
+
+  void _onVideoFinished() {
+    if (_isVideoFinished) return;
     
-    if (loggedIn) {
+    setState(() {
+      _isVideoFinished = true;
+    });
+
+    // If auth check is also done, navigate to the next screen
+    if (_isAuthChecked) {
+      _navigateToNext();
+    }
+  }
+
+  Future<void> _navigateToNext() async {
+    if (_isNavigated) return;
+    _isNavigated = true;
+
+    _fallbackTimer?.cancel();
+
+    // Pause video player
+    if (_isControllerInitialized) {
+      try {
+        await _videoController.pause();
+      } catch (_) {}
+    }
+
+    if (!mounted) return;
+
+    final authProvider = context.read<AuthProvider>();
+    if (_loggedIn) {
       if (authProvider.isAdmin) {
         Navigator.pushReplacementNamed(context, AppRoutes.adminDashboard);
       } else {
@@ -81,64 +145,30 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   @override
   void dispose() {
-    _controller.dispose();
+    _fallbackTimer?.cancel();
+    _videoController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: AppTheme.backgroundColor, // Deep slate background (#030712)
       body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Modern glowing container for the logo
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-                  margin: const EdgeInsets.symmetric(horizontal: 40),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primaryColor.withOpacity(0.12),
-                        blurRadius: 40,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.05),
-                      width: 1,
-                    ),
-                  ),
-                  child: Image.asset(
-                    'assets/images/logo.png',
-                    width: 200,
-                    height: 80,
-                    fit: BoxFit.contain,
+        child: _isControllerInitialized
+            ? SizedBox.expand(
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: _videoController.value.size.width,
+                    height: _videoController.value.size.height,
+                    child: VideoPlayer(_videoController),
                   ),
                 ),
-                const SizedBox(height: 48),
-                // Glowing text indicator or a very subtle clean loading indicator
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      AppTheme.primaryColor.withOpacity(0.8),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+              )
+            : const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+              ),
       ),
     );
   }
