@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import 'user_provider.dart';
 
 class RewardsScreen extends StatelessWidget {
@@ -34,7 +36,7 @@ class RewardsScreen extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Text(
-                  'Your Utility Payments & Vouchers',
+                  'Redemption & Reward History',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w900,
@@ -48,7 +50,7 @@ class RewardsScreen extends StatelessWidget {
             AnimatedEntrance(
               delayMs: 100,
               child: SizedBox(
-                height: 130,
+                height: 135,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -56,80 +58,182 @@ class RewardsScreen extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final voucher = provider.myVouchers[index];
                     IconData typeIcon = Icons.confirmation_number_rounded;
+                    Gradient cardGradient = const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF1F2937), Color(0xFF111827)],
+                    );
+
                     if (voucher.billType != null) {
                       if (voucher.billType!.contains('property')) {
                         typeIcon = Icons.home_work_rounded;
+                        cardGradient = const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF312E81), Color(0xFF1E1B4B)],
+                        );
                       } else if (voucher.billType!.contains('electricity')) {
                         typeIcon = Icons.bolt_rounded;
+                        cardGradient = const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF78350F), Color(0xFF451A03)],
+                        );
                       } else if (voucher.billType!.contains('water')) {
                         typeIcon = Icons.water_drop_rounded;
+                        cardGradient = const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF065F46), Color(0xFF022C22)],
+                        );
                       }
                     }
-                    return Container(
-                      width: 220,
-                      margin: const EdgeInsets.only(right: 12),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(typeIcon, size: 16, color: Theme.of(context).colorScheme.primary),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  voucher.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
+
+                    return GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => _VoucherDetailDialog(
+                            voucher: voucher,
+                            typeIcon: typeIcon,
+                            cardGradient: cardGradient,
                           ),
-                          const Spacer(),
-                          Text(
-                            voucher.code,
-                            style: const TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                          if (voucher.consumerNumber != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              'Consumer ID: ${voucher.consumerNumber}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10),
+                        );
+                      },
+                      child: Container(
+                        width: 270,
+                        margin: const EdgeInsets.only(right: 14),
+                        decoration: BoxDecoration(
+                          gradient: cardGradient,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withOpacity(0.15)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
                             ),
                           ],
-                          const Spacer(),
-                          InkWell(
-                            onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Voucher code copied!')),
-                              );
-                            },
-                            child: Row(
-                              children: [
-                                Icon(Icons.copy, size: 12, color: Theme.of(context).colorScheme.primary),
-                                const SizedBox(width: 4),
-                                const Text('Copy Code', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                              ],
+                        ),
+                        child: Row(
+                          children: [
+                            // Left side details
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 12,
+                                          backgroundColor: Colors.white.withOpacity(0.2),
+                                          child: Icon(typeIcon, size: 14, color: Colors.white),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            voucher.billType != null
+                                                ? voucher.billType!.replaceAll('_', ' ').toUpperCase()
+                                                : 'VOUCHER',
+                                            style: const TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 1,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      voucher.title,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        height: 1.1,
+                                      ),
+                                    ),
+                                    if (voucher.consumerNumber != null)
+                                      Text(
+                                        'ID: ${voucher.consumerNumber}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.6),
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                            
+                            // Dashed divider line
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(
+                                6,
+                                (_) => Container(
+                                  margin: const EdgeInsets.symmetric(vertical: 3),
+                                  width: 1.5,
+                                  height: 5,
+                                  color: Colors.white24,
+                                ),
+                              ),
+                            ),
+                            
+                            // Right side action/code
+                            Container(
+                              width: 85,
+                              padding: const EdgeInsets.all(10.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    voucher.code,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontFamily: 'monospace',
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.15),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.qr_code_2_rounded,
+                                      size: 20,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'VIEW',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -720,6 +824,316 @@ class _RedemptionSuccessDialog extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _VoucherDetailDialog extends StatelessWidget {
+  final RedeemedVoucher voucher;
+  final IconData typeIcon;
+  final Gradient cardGradient;
+
+  const _VoucherDetailDialog({
+    required this.voucher,
+    required this.typeIcon,
+    required this.cardGradient,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+      child: Center(
+        child: Container(
+          width: double.infinity,
+          maxWidth: 340,
+          decoration: BoxDecoration(
+            gradient: cardGradient,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.6),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header section
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundColor: Colors.white.withOpacity(0.15),
+                      child: Icon(typeIcon, color: Colors.white, size: 30),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      voucher.title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      voucher.billType != null
+                          ? voucher.billType!.replaceAll('_', ' ').toUpperCase()
+                          : 'REWARD VOUCHER',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Dashed divider line with side cutout notches
+              Row(
+                children: [
+                  Container(
+                    width: 12,
+                    height: 24,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF030712), // Background slate color
+                      borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(12),
+                        bottomRight: Radius.circular(12),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Flex(
+                          direction: Axis.horizontal,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: List.generate(
+                            (constraints.constrainWidth() / 10).floor(),
+                            (_) => const SizedBox(
+                              width: 5,
+                              height: 1,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(color: Colors.white24),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Container(
+                    width: 12,
+                    height: 24,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF030712), // Background slate color
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        bottomLeft: Radius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              
+              // Code and copy area
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20.0, 16.0, 20.0, 20.0),
+                child: Column(
+                  children: [
+                    const Text(
+                      'TRANSACTION REFERENCE CODE',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: voucher.code));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Voucher code copied to clipboard!')),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              voucher.code,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'monospace',
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.copy, color: Colors.white54, size: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Barcode illustration
+                    Container(
+                      height: 44,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: List.generate(
+                          26,
+                          (index) => Container(
+                            width: (index % 3 == 0) ? 3.0 : (index % 5 == 0) ? 1.0 : 2.0,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    if (voucher.consumerNumber != null)
+                      _buildDetailRow('Consumer ID', voucher.consumerNumber!),
+                    if (voucher.providerName != null)
+                      _buildDetailRow('Provider', voucher.providerName!),
+                    _buildDetailRow('Redeemed On', DateFormat.yMMMd().format(DateTime.now())),
+                    
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text('Close Voucher', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.white54, fontSize: 11)),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AnimatedEntrance extends StatefulWidget {
+  final Widget child;
+  final int delayMs;
+
+  const AnimatedEntrance({
+    super.key,
+    required this.child,
+    required this.delayMs,
+  });
+
+  @override
+  State<AnimatedEntrance> createState() => _AnimatedEntranceState();
+}
+
+class _AnimatedEntranceState extends State<AnimatedEntrance> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0.0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    ));
+
+    Future.delayed(Duration(milliseconds: widget.delayMs), () {
+      if (mounted) {
+        _controller.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: widget.child,
       ),
     );
   }
