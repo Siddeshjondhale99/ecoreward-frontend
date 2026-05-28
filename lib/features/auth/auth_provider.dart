@@ -147,8 +147,9 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  void logout() {
+  Future<void> logout() async {
     _currentUser = null;
+    await _apiService.deleteToken();
     notifyListeners();
   }
 }

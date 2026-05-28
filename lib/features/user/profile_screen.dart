@@ -365,9 +365,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () {
-                          context.read<AuthProvider>().logout();
-                          Navigator.pushReplacementNamed(context, '/');
+                        onPressed: () async {
+                          await context.read<AuthProvider>().logout();
+                          if (mounted) {
+                            Navigator.pushReplacementNamed(context, '/login');
+                          }
                         },
                         icon: const Icon(Icons.logout, color: Colors.redAccent, size: 18),
                         label: const Text('LOGOUT', style: TextStyle(color: Colors.redAccent)),
