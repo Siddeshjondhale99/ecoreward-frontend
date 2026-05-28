@@ -443,6 +443,7 @@ class _GenerateVoucherCardState extends State<_GenerateVoucherCard> {
   String? _selectedMunicipalBoard;
   double _convertedValue = 0.0;
   bool _isGenerating = false;
+  bool _isExpanded = false; // Collapsed by default
 
   @override
   void initState() {
@@ -496,248 +497,262 @@ class _GenerateVoucherCardState extends State<_GenerateVoucherCard> {
     final primaryColor = Theme.of(context).colorScheme.primary; 
     final surfaceColor = Theme.of(context).colorScheme.surface;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: primaryColor.withOpacity(0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.1), 
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.receipt_long_rounded, color: primaryColor, size: 28),
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: primaryColor.withOpacity(0.1)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.4),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: () => setState(() => _isExpanded = !_isExpanded),
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.1), 
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.receipt_long_rounded, color: primaryColor, size: 28),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Pay Utility Bills',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const Text(
+                          'Convert points to tax & bill credit',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.white60,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                    color: primaryColor,
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
-              Expanded(
+            ),
+            if (_isExpanded) ...[
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedBillType,
+                isExpanded: true,
+                dropdownColor: const Color(0xFF1E1E1E),
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                decoration: InputDecoration(
+                  labelText: 'Select utility/tax type',
+                  labelStyle: TextStyle(color: primaryColor.withOpacity(0.8), fontSize: 10, fontWeight: FontWeight.bold),
+                  filled: true,
+                  fillColor: Colors.black.withOpacity(0.3),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                  ),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'property_tax', child: Text('🏠 Property Tax Rebate')),
+                  DropdownMenuItem(value: 'electricity_bill', child: Text('⚡ Electricity Bill Discount')),
+                  DropdownMenuItem(value: 'water_bill', child: Text('💧 Water Tax/Bill Discount')),
+                ],
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() {
+                      _selectedBillType = val;
+                      _providerController.clear();
+                      _selectedMunicipalBoard = null;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _pointsController,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Points to redeem (min. 100)',
+                        labelStyle: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                        hintText: 'Points',
+                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.2), fontSize: 12, fontWeight: FontWeight.bold),
+                        filled: true,
+                        fillColor: Colors.black.withOpacity(0.3),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        suffixText: _convertedValue > 0 ? '₹${_convertedValue.toStringAsFixed(2)}' : null,
+                        suffixStyle: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.0, 0.1),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
                 child: Column(
+                  key: ValueKey<String>(_selectedBillType),
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Pay Utility Bills',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
+                    TextField(
+                      controller: _consumerController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: _getConsumerLabel(),
+                        labelStyle: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                        hintText: _getConsumerHint(),
+                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.2), fontSize: 12),
+                        filled: true,
+                        fillColor: Colors.black.withOpacity(0.3),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                        ),
                       ),
                     ),
-                    Text(
-                      'Convert points to tax & bill credit',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.white60,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    const SizedBox(height: 12),
+                    _selectedBillType == 'property_tax'
+                        ? DropdownButtonFormField<String>(
+                            key: const ValueKey<String>('municipal_dropdown'),
+                            value: _selectedMunicipalBoard,
+                            isExpanded: true,
+                            dropdownColor: const Color(0xFF1E1E1E),
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                            decoration: InputDecoration(
+                              labelText: 'Select Municipal Corporation',
+                              labelStyle: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                              filled: true,
+                              fillColor: Colors.black.withOpacity(0.3),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                              ),
+                            ),
+                            items: const [
+                              DropdownMenuItem(value: 'NMC', child: Text('Nashik Municipal Corporation (NMC)')),
+                              DropdownMenuItem(value: 'BMC', child: Text('Brihanmumbai Municipal Corporation (BMC)')),
+                              DropdownMenuItem(value: 'PMC', child: Text('Pune Municipal Corporation (PMC)')),
+                              DropdownMenuItem(value: 'TMC', child: Text('Thane Municipal Corporation (TMC)')),
+                            ],
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() {
+                                  _selectedMunicipalBoard = val;
+                                  _providerController.text = val;
+                                });
+                              }
+                            },
+                          )
+                        : TextField(
+                            key: const ValueKey<String>('provider_textfield'),
+                            controller: _providerController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: _getProviderLabel(),
+                              labelStyle: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                              hintText: _getProviderHint(),
+                              hintStyle: TextStyle(color: Colors.white.withOpacity(0.2), fontSize: 12),
+                              filled: true,
+                              fillColor: Colors.black.withOpacity(0.3),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                              ),
+                            ),
+                          ),
                   ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            value: _selectedBillType,
-            isExpanded: true,
-            dropdownColor: const Color(0xFF1E1E1E),
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-            decoration: InputDecoration(
-              labelText: 'Select utility/tax type',
-              labelStyle: TextStyle(color: primaryColor.withOpacity(0.8), fontSize: 10, fontWeight: FontWeight.bold),
-              filled: true,
-              fillColor: Colors.black.withOpacity(0.3),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
-              ),
-            ),
-            items: const [
-              DropdownMenuItem(value: 'property_tax', child: Text('🏠 Property Tax Rebate')),
-              DropdownMenuItem(value: 'electricity_bill', child: Text('⚡ Electricity Bill Discount')),
-              DropdownMenuItem(value: 'water_bill', child: Text('💧 Water Tax/Bill Discount')),
-            ],
-            onChanged: (val) {
-              if (val != null) {
-                setState(() {
-                  _selectedBillType = val;
-                  _providerController.clear();
-                  _selectedMunicipalBoard = null;
-                });
-              }
-            },
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _pointsController,
-                  keyboardType: TextInputType.number,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Points to redeem (min. 100)',
-                    labelStyle: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
-                    hintText: 'Points',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.2), fontSize: 12, fontWeight: FontWeight.bold),
-                    filled: true,
-                    fillColor: Colors.black.withOpacity(0.3),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    suffixText: _convertedValue > 0 ? '₹${_convertedValue.toStringAsFixed(2)}' : null,
-                    suffixStyle: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
-                    ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isGenerating ? null : _handleGenerate,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
+                  child: _isGenerating
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                      : const Text(
+                          'Apply Redemption',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 12),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0.0, 0.1),
-                    end: Offset.zero,
-                  ).animate(animation),
-                  child: child,
-                ),
-              );
-            },
-            child: Column(
-              key: ValueKey<String>(_selectedBillType),
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: _consumerController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: _getConsumerLabel(),
-                    labelStyle: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
-                    hintText: _getConsumerHint(),
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.2), fontSize: 12),
-                    filled: true,
-                    fillColor: Colors.black.withOpacity(0.3),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _selectedBillType == 'property_tax'
-                    ? DropdownButtonFormField<String>(
-                        key: const ValueKey<String>('municipal_dropdown'),
-                        value: _selectedMunicipalBoard,
-                        isExpanded: true,
-                        dropdownColor: const Color(0xFF1E1E1E),
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                        decoration: InputDecoration(
-                          labelText: 'Select Municipal Corporation',
-                          labelStyle: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
-                          filled: true,
-                          fillColor: Colors.black.withOpacity(0.3),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
-                          ),
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: 'NMC', child: Text('Nashik Municipal Corporation (NMC)')),
-                          DropdownMenuItem(value: 'BMC', child: Text('Brihanmumbai Municipal Corporation (BMC)')),
-                          DropdownMenuItem(value: 'PMC', child: Text('Pune Municipal Corporation (PMC)')),
-                          DropdownMenuItem(value: 'TMC', child: Text('Thane Municipal Corporation (TMC)')),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() {
-                              _selectedMunicipalBoard = val;
-                              _providerController.text = val;
-                            });
-                          }
-                        },
-                      )
-                    : TextField(
-                        key: const ValueKey<String>('provider_textfield'),
-                        controller: _providerController,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          labelText: _getProviderLabel(),
-                          labelStyle: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
-                          hintText: _getProviderHint(),
-                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.2), fontSize: 12),
-                          filled: true,
-                          fillColor: Colors.black.withOpacity(0.3),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
-                          ),
-                        ),
-                      ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isGenerating ? null : _handleGenerate,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: _isGenerating
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                  : const Text(
-                      'Apply Redemption',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
