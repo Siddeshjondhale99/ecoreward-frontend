@@ -2,10 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../../models/redeemed_voucher.dart';
 import 'user_provider.dart';
 
-class RewardsScreen extends StatelessWidget {
+class RewardsScreen extends StatefulWidget {
   const RewardsScreen({super.key});
+
+  @override
+  State<RewardsScreen> createState() => _RewardsScreenState();
+}
+
+class _RewardsScreenState extends State<RewardsScreen> {
+  int _activeTab = 0; // 0 for Redemption, 1 for Reward History
 
   @override
   Widget build(BuildContext context) {
@@ -30,319 +38,388 @@ class RewardsScreen extends StatelessWidget {
               ],
             ),
           ),
-          if (provider.myVouchers.isNotEmpty) ...[
-            AnimatedEntrance(
-              delayMs: 0,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'Redemption & Reward History',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.5,
-                    color: Theme.of(context).colorScheme.primary,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _activeTab = 0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: _activeTab == 0
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          'Redemption',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: _activeTab == 0 ? Colors.black : Colors.white60,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _activeTab = 1),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: _activeTab == 1
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          'Reward History',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: _activeTab == 1 ? Colors.black : Colors.white60,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
-            AnimatedEntrance(
-              delayMs: 100,
-              child: SizedBox(
-                height: 135,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: provider.myVouchers.length,
-                  itemBuilder: (context, index) {
-                    final voucher = provider.myVouchers[index];
-                    IconData typeIcon = Icons.confirmation_number_rounded;
-                    Gradient cardGradient = const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF1F2937), Color(0xFF111827)],
-                    );
-
-                    if (voucher.billType != null) {
-                      if (voucher.billType!.contains('property')) {
-                        typeIcon = Icons.home_work_rounded;
-                        cardGradient = const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF312E81), Color(0xFF1E1B4B)],
-                        );
-                      } else if (voucher.billType!.contains('electricity')) {
-                        typeIcon = Icons.bolt_rounded;
-                        cardGradient = const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF78350F), Color(0xFF451A03)],
-                        );
-                      } else if (voucher.billType!.contains('water')) {
-                        typeIcon = Icons.water_drop_rounded;
-                        cardGradient = const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF065F46), Color(0xFF022C22)],
-                        );
-                      }
-                    }
-
-                    return GestureDetector(
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => _VoucherDetailDialog(
-                            voucher: voucher,
-                            typeIcon: typeIcon,
-                            cardGradient: cardGradient,
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              transitionBuilder: (child, animation) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+              child: _activeTab == 0
+                  ? Column(
+                      key: const ValueKey<int>(0),
+                      children: [
+                        const AnimatedEntrance(
+                          delayMs: 100,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.0),
+                            child: _GenerateVoucherCard(),
                           ),
-                        );
-                      },
-                      child: Container(
-                        width: 270,
-                        margin: const EdgeInsets.only(right: 14),
-                        decoration: BoxDecoration(
-                          gradient: cardGradient,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withOpacity(0.15)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
                         ),
-                        child: Row(
-                          children: [
-                            // Left side details
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
+                        const SizedBox(height: 16),
+                        Expanded(
+                          child: GridView.builder(
+                            padding: const EdgeInsets.all(16),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              childAspectRatio: 0.68,
+                            ),
+                            itemCount: coupons.length,
+                            itemBuilder: (context, index) {
+                              final coupon = coupons[index];
+                              IconData icon;
+                              switch (coupon.iconType) {
+                                case 'property':
+                                  icon = Icons.home_work_rounded;
+                                  break;
+                                case 'electricity':
+                                  icon = Icons.bolt_rounded;
+                                  break;
+                                case 'water':
+                                  icon = Icons.water_drop_rounded;
+                                  break;
+                                case 'stars':
+                                default:
+                                  icon = Icons.stars_rounded;
+                              }
+
+                              final canRedeem = provider.totalPoints >= coupon.pointsRequired;
+
+                              return AnimatedEntrance(
+                                delayMs: 200 + (index * 100).clamp(0, 500),
+                                child: Card(
+                                  elevation: 4,
+                                  shadowColor: Colors.black.withOpacity(0.5),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         CircleAvatar(
-                                          radius: 12,
-                                          backgroundColor: Colors.white.withOpacity(0.2),
-                                          child: Icon(typeIcon, size: 14, color: Colors.white),
+                                          radius: 24,
+                                          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                          child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 28),
                                         ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            voucher.billType != null
-                                                ? voucher.billType!.replaceAll('_', ' ').toUpperCase()
-                                                : 'VOUCHER',
-                                            style: const TextStyle(
-                                              color: Colors.white70,
-                                              fontSize: 9,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 1,
+                                        Text(
+                                          coupon.title,
+                                          textAlign: TextAlign.center,
+                                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                                        ),
+                                        Text(
+                                          '${coupon.pointsRequired} pts',
+                                          style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: canRedeem
+                                              ? () async {
+                                                  final code = await provider.redeemCoupon(coupon);
+                                                  if (code != null && context.mounted) {
+                                                    showDialog(
+                                                      context: context,
+                                                      barrierDismissible: false,
+                                                      builder: (context) => _RedemptionSuccessDialog(
+                                                        couponTitle: coupon.title,
+                                                        code: code,
+                                                      ),
+                                                    );
+                                                  }
+                                                }
+                                              : null,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: canRedeem ? Theme.of(context).colorScheme.primary : Colors.white.withOpacity(0.05),
+                                            foregroundColor: canRedeem ? Colors.black : Colors.white24,
+                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                            minimumSize: const Size(double.infinity, 36),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                          ),
+                                          child: const Text(
+                                            'REDEEM',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w900,
+                                              fontStyle: FontStyle.italic,
                                             ),
                                           ),
                                         ),
                                       ],
                                     ),
-                                    Text(
-                                      voucher.title,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        height: 1.1,
-                                      ),
-                                    ),
-                                    if (voucher.consumerNumber != null)
-                                      Text(
-                                        'ID: ${voucher.consumerNumber}',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          color: Colors.white.withOpacity(0.6),
-                                          fontSize: 10,
-                                        ),
-                                      ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ),
-                            
-                            // Dashed divider line
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: List.generate(
-                                6,
-                                (_) => Container(
-                                  margin: const EdgeInsets.symmetric(vertical: 3),
-                                  width: 1.5,
-                                  height: 5,
-                                  color: Colors.white24,
-                                ),
-                              ),
-                            ),
-                            
-                            // Right side action/code
-                            Container(
-                              width: 85,
-                              padding: const EdgeInsets.all(10.0),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    voucher.code,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontFamily: 'monospace',
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.15),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.qr_code_2_rounded,
-                                      size: 20,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    'VIEW',
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
-          const AnimatedEntrance(
-            delayMs: 200,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: _GenerateVoucherCard(),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.68,
-              ),
-              itemCount: coupons.length,
-              itemBuilder: (context, index) {
-                final coupon = coupons[index];
-                IconData icon;
-                switch (coupon.iconType) {
-                  case 'property':
-                    icon = Icons.home_work_rounded;
-                    break;
-                  case 'electricity':
-                    icon = Icons.bolt_rounded;
-                    break;
-                  case 'water':
-                    icon = Icons.water_drop_rounded;
-                    break;
-                  case 'stars':
-                  default:
-                    icon = Icons.stars_rounded;
-                }
+                      ],
+                    )
+                  : provider.myVouchers.isEmpty
+                      ? const Center(
+                          key: ValueKey<int>(1),
+                          child: Padding(
+                            padding: EdgeInsets.all(32.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.history_toggle_off_rounded, size: 54, color: Colors.white24),
+                                SizedBox(height: 12),
+                                Text(
+                                  'No Vouchers Redeemed',
+                                  style: TextStyle(color: Colors.white60, fontWeight: FontWeight.bold),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Redeem points to pay your utility bills.',
+                                  style: TextStyle(color: Colors.white38, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          key: const ValueKey<int>(2),
+                          padding: const EdgeInsets.only(top: 8, bottom: 24),
+                          itemCount: provider.myVouchers.length,
+                          itemBuilder: (context, index) {
+                            final voucher = provider.myVouchers[index];
+                            IconData typeIcon = Icons.confirmation_number_rounded;
+                            Gradient cardGradient = const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFF1F2937), Color(0xFF111827)],
+                            );
 
-                final canRedeem = provider.totalPoints >= coupon.pointsRequired;
+                            if (voucher.billType != null) {
+                              if (voucher.billType!.contains('property')) {
+                                typeIcon = Icons.home_work_rounded;
+                                cardGradient = const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [Color(0xFF312E81), Color(0xFF1E1B4B)],
+                                );
+                              } else if (voucher.billType!.contains('electricity')) {
+                                typeIcon = Icons.bolt_rounded;
+                                cardGradient = const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [Color(0xFF78350F), Color(0xFF451A03)],
+                                );
+                              } else if (voucher.billType!.contains('water')) {
+                                typeIcon = Icons.water_drop_rounded;
+                                cardGradient = const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [Color(0xFF065F46), Color(0xFF022C22)],
+                                );
+                              }
+                            }
 
-                return AnimatedEntrance(
-                  delayMs: 300 + (index * 100).clamp(0, 600),
-                  child: Card(
-                    elevation: 4,
-                    shadowColor: Colors.black.withOpacity(0.5),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                            child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 28),
-                          ),
-                          Text(
-                            coupon.title,
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            '${coupon.pointsRequired} pts',
-                            style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
-                          ),
-                          ElevatedButton(
-                            onPressed: canRedeem
-                                ? () async {
-                                    final code = await provider.redeemCoupon(coupon);
-                                    if (code != null && context.mounted) {
-                                      showDialog(
-                                        context: context,
-                                        barrierDismissible: false,
-                                        builder: (context) => _RedemptionSuccessDialog(
-                                          couponTitle: coupon.title,
-                                          code: code,
+                            return AnimatedEntrance(
+                              delayMs: (index * 80).clamp(0, 400),
+                              child: GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => _VoucherDetailDialog(
+                                      voucher: voucher,
+                                      typeIcon: typeIcon,
+                                      cardGradient: cardGradient,
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  height: 110,
+                                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    gradient: cardGradient,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: Colors.white.withOpacity(0.15)),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(12.0),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  CircleAvatar(
+                                                    radius: 12,
+                                                    backgroundColor: Colors.white.withOpacity(0.2),
+                                                    child: Icon(typeIcon, size: 14, color: Colors.white),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    voucher.billType != null
+                                                        ? voucher.billType!.replaceAll('_', ' ').toUpperCase()
+                                                        : 'VOUCHER',
+                                                    style: const TextStyle(
+                                                      color: Colors.white70,
+                                                      fontSize: 9,
+                                                      fontWeight: FontWeight.bold,
+                                                      letterSpacing: 1,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Text(
+                                                voucher.title,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              if (voucher.consumerNumber != null)
+                                                Text(
+                                                  'ID: ${voucher.consumerNumber}',
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    color: Colors.white.withOpacity(0.6),
+                                                    fontSize: 10,
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
                                         ),
-                                      );
-                                    }
-                                  }
-                                : null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: canRedeem ? Theme.of(context).colorScheme.primary : Colors.white.withOpacity(0.05),
-                              foregroundColor: canRedeem ? Colors.black : Colors.white24,
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              minimumSize: const Size(double.infinity, 36),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            ),
-                            child: const Text(
-                              'REDEEM',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                fontStyle: FontStyle.italic,
+                                      ),
+                                      Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: List.generate(
+                                          5,
+                                          (_) => Container(
+                                            margin: const EdgeInsets.symmetric(vertical: 2),
+                                            width: 1.5,
+                                            height: 4,
+                                            color: Colors.white24,
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        width: 95,
+                                        padding: const EdgeInsets.all(10),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              voucher.code,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontFamily: 'monospace',
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(0.15),
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: const Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(Icons.qr_code_2_rounded, size: 12, color: Colors.white),
+                                                  SizedBox(width: 4),
+                                                  Text(
+                                                    'VIEW',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 8,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
+                            );
+                          },
+                        ),
             ),
           ),
         ],
@@ -848,7 +925,7 @@ class _VoucherDetailDialog extends StatelessWidget {
       child: Center(
         child: Container(
           width: double.infinity,
-          maxWidth: 340,
+          constraints: const BoxConstraints(maxWidth: 340),
           decoration: BoxDecoration(
             gradient: cardGradient,
             borderRadius: BorderRadius.circular(24),
