@@ -29,112 +29,121 @@ class RewardsScreen extends StatelessWidget {
             ),
           ),
           if (provider.myVouchers.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Your Utility Payments & Vouchers',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.5,
-                  color: Theme.of(context).colorScheme.primary,
+            AnimatedEntrance(
+              delayMs: 0,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  'Your Utility Payments & Vouchers',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 12),
-            SizedBox(
-              height: 130,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: provider.myVouchers.length,
-                itemBuilder: (context, index) {
-                  final voucher = provider.myVouchers[index];
-                  IconData typeIcon = Icons.confirmation_number_rounded;
-                  if (voucher.billType != null) {
-                    if (voucher.billType!.contains('property')) {
-                      typeIcon = Icons.home_work_rounded;
-                    } else if (voucher.billType!.contains('electricity')) {
-                      typeIcon = Icons.bolt_rounded;
-                    } else if (voucher.billType!.contains('water')) {
-                      typeIcon = Icons.water_drop_rounded;
+            AnimatedEntrance(
+              delayMs: 100,
+              child: SizedBox(
+                height: 130,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: provider.myVouchers.length,
+                  itemBuilder: (context, index) {
+                    final voucher = provider.myVouchers[index];
+                    IconData typeIcon = Icons.confirmation_number_rounded;
+                    if (voucher.billType != null) {
+                      if (voucher.billType!.contains('property')) {
+                        typeIcon = Icons.home_work_rounded;
+                      } else if (voucher.billType!.contains('electricity')) {
+                        typeIcon = Icons.bolt_rounded;
+                      } else if (voucher.billType!.contains('water')) {
+                        typeIcon = Icons.water_drop_rounded;
+                      }
                     }
-                  }
-                  return Container(
-                    width: 220,
-                    margin: const EdgeInsets.only(right: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(typeIcon, size: 16, color: Theme.of(context).colorScheme.primary),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                voucher.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                    return Container(
+                      width: 220,
+                      margin: const EdgeInsets.only(right: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(typeIcon, size: 16, color: Theme.of(context).colorScheme.primary),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  voucher.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        Text(
-                          voucher.code,
-                          style: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                        if (voucher.consumerNumber != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            'Consumer ID: ${voucher.consumerNumber}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10),
-                          ),
-                        ],
-                        const Spacer(),
-                        InkWell(
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Voucher code copied!')),
-                            );
-                          },
-                          child: Row(
-                            children: [
-                              Icon(Icons.copy, size: 12, color: Theme.of(context).colorScheme.primary),
-                              const SizedBox(width: 4),
-                              const Text('Copy Code', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                          const Spacer(),
+                          Text(
+                            voucher.code,
+                            style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                          if (voucher.consumerNumber != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              'Consumer ID: ${voucher.consumerNumber}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10),
+                            ),
+                          ],
+                          const Spacer(),
+                          InkWell(
+                            onTap: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Voucher code copied!')),
+                              );
+                            },
+                            child: Row(
+                              children: [
+                                Icon(Icons.copy, size: 12, color: Theme.of(context).colorScheme.primary),
+                                const SizedBox(width: 4),
+                                const Text('Copy Code', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 24),
           ],
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: _GenerateVoucherCard(),
+          const AnimatedEntrance(
+            delayMs: 200,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: _GenerateVoucherCard(),
+            ),
           ),
           const SizedBox(height: 16),
           Expanded(
@@ -144,7 +153,7 @@ class RewardsScreen extends StatelessWidget {
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 0.8,
+                childAspectRatio: 0.68,
               ),
               itemCount: coupons.length,
               itemBuilder: (context, index) {
@@ -167,62 +176,65 @@ class RewardsScreen extends StatelessWidget {
 
                 final canRedeem = provider.totalPoints >= coupon.pointsRequired;
 
-                return Card(
-                  elevation: 4,
-                  shadowColor: Colors.black.withOpacity(0.5),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        CircleAvatar(
-                          radius: 24,
-                          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                          child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 28),
-                        ),
-                        Text(
-                          coupon.title,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          '${coupon.pointsRequired} pts',
-                          style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
-                        ),
-                        ElevatedButton(
-                          onPressed: canRedeem
-                              ? () async {
-                                  final code = await provider.redeemCoupon(coupon);
-                                  if (code != null && context.mounted) {
-                                    showDialog(
-                                      context: context,
-                                      barrierDismissible: false,
-                                      builder: (context) => _RedemptionSuccessDialog(
-                                        couponTitle: coupon.title,
-                                        code: code,
-                                      ),
-                                    );
-                                  }
-                                }
-                              : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: canRedeem ? Theme.of(context).colorScheme.primary : Colors.white.withOpacity(0.05),
-                            foregroundColor: canRedeem ? Colors.black : Colors.white24,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            minimumSize: const Size(double.infinity, 36),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                return AnimatedEntrance(
+                  delayMs: 300 + (index * 100).clamp(0, 600),
+                  child: Card(
+                    elevation: 4,
+                    shadowColor: Colors.black.withOpacity(0.5),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                            child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 28),
                           ),
-                          child: const Text(
-                            'REDEEM',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                              fontStyle: FontStyle.italic,
+                          Text(
+                            coupon.title,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            '${coupon.pointsRequired} pts',
+                            style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+                          ),
+                          ElevatedButton(
+                            onPressed: canRedeem
+                                ? () async {
+                                    final code = await provider.redeemCoupon(coupon);
+                                    if (code != null && context.mounted) {
+                                      showDialog(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder: (context) => _RedemptionSuccessDialog(
+                                          couponTitle: coupon.title,
+                                          code: code,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: canRedeem ? Theme.of(context).colorScheme.primary : Colors.white.withOpacity(0.05),
+                              foregroundColor: canRedeem ? Colors.black : Colors.white24,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              minimumSize: const Size(double.infinity, 36),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            child: const Text(
+                              'REDEEM',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                fontStyle: FontStyle.italic,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -358,6 +370,7 @@ class _GenerateVoucherCardState extends State<_GenerateVoucherCard> {
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             value: _selectedBillType,
+            isExpanded: true,
             dropdownColor: const Color(0xFF1E1E1E),
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
             decoration: InputDecoration(
@@ -400,7 +413,7 @@ class _GenerateVoucherCardState extends State<_GenerateVoucherCard> {
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: 'Points to redeem (min. 100)',
-                    labelStyle: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                    labelStyle: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
                     hintText: 'Points',
                     hintStyle: TextStyle(color: Colors.white.withOpacity(0.2), fontSize: 12, fontWeight: FontWeight.bold),
                     filled: true,
@@ -422,70 +435,31 @@ class _GenerateVoucherCardState extends State<_GenerateVoucherCard> {
             ],
           ),
           const SizedBox(height: 12),
-          TextField(
-            controller: _consumerController,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              labelText: _getConsumerLabel(),
-              labelStyle: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
-              hintText: _getConsumerHint(),
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.2), fontSize: 12),
-              filled: true,
-              fillColor: Colors.black.withOpacity(0.3),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          _selectedBillType == 'property_tax'
-              ? DropdownButtonFormField<String>(
-                  value: _selectedMunicipalBoard,
-                  dropdownColor: const Color(0xFF1E1E1E),
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                  decoration: InputDecoration(
-                    labelText: 'Select Municipal Corporation',
-                    labelStyle: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
-                    filled: true,
-                    fillColor: Colors.black.withOpacity(0.3),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
-                    ),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'NMC', child: Text('Nashik Municipal Corporation (NMC)')),
-                    DropdownMenuItem(value: 'BMC', child: Text('Brihanmumbai Municipal Corporation (BMC)')),
-                    DropdownMenuItem(value: 'PMC', child: Text('Pune Municipal Corporation (PMC)')),
-                    DropdownMenuItem(value: 'TMC', child: Text('Thane Municipal Corporation (TMC)')),
-                  ],
-                  onChanged: (val) {
-                    if (val != null) {
-                      setState(() {
-                        _selectedMunicipalBoard = val;
-                        _providerController.text = val;
-                      });
-                    }
-                  },
-                )
-              : TextField(
-                  controller: _providerController,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0.0, 0.1),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              );
+            },
+            child: Column(
+              key: ValueKey<String>(_selectedBillType),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _consumerController,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: _getProviderLabel(),
-                    labelStyle: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
-                    hintText: _getProviderHint(),
+                    labelText: _getConsumerLabel(),
+                    labelStyle: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                    hintText: _getConsumerHint(),
                     hintStyle: TextStyle(color: Colors.white.withOpacity(0.2), fontSize: 12),
                     filled: true,
                     fillColor: Colors.black.withOpacity(0.3),
@@ -500,6 +474,69 @@ class _GenerateVoucherCardState extends State<_GenerateVoucherCard> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                _selectedBillType == 'property_tax'
+                    ? DropdownButtonFormField<String>(
+                        key: const ValueKey<String>('municipal_dropdown'),
+                        value: _selectedMunicipalBoard,
+                        isExpanded: true,
+                        dropdownColor: const Color(0xFF1E1E1E),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                        decoration: InputDecoration(
+                          labelText: 'Select Municipal Corporation',
+                          labelStyle: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                          filled: true,
+                          fillColor: Colors.black.withOpacity(0.3),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                          ),
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 'NMC', child: Text('Nashik Municipal Corporation (NMC)')),
+                          DropdownMenuItem(value: 'BMC', child: Text('Brihanmumbai Municipal Corporation (BMC)')),
+                          DropdownMenuItem(value: 'PMC', child: Text('Pune Municipal Corporation (PMC)')),
+                          DropdownMenuItem(value: 'TMC', child: Text('Thane Municipal Corporation (TMC)')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              _selectedMunicipalBoard = val;
+                              _providerController.text = val;
+                            });
+                          }
+                        },
+                      )
+                    : TextField(
+                        key: const ValueKey<String>('provider_textfield'),
+                        controller: _providerController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          labelText: _getProviderLabel(),
+                          labelStyle: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                          hintText: _getProviderHint(),
+                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.2), fontSize: 12),
+                          filled: true,
+                          fillColor: Colors.black.withOpacity(0.3),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                          ),
+                        ),
+                      ),
+              ],
+            ),
+          ),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,

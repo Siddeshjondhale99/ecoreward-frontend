@@ -107,6 +107,8 @@ class AuthProvider extends ChangeNotifier {
     String? wardNo,
     String? houseNo,
     String? profilePhoto,
+    String? city,
+    String? pincode,
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -120,6 +122,8 @@ class AuthProvider extends ChangeNotifier {
         if (wardNo != null) 'ward_no': wardNo,
         if (houseNo != null) 'house_no': houseNo,
         if (profilePhoto != null) 'profile_photo': profilePhoto,
+        if (city != null) 'city': city,
+        if (pincode != null) 'pincode': pincode,
       }, authenticated: true);
 
       if (response.statusCode == 200) {

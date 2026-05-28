@@ -9,6 +9,8 @@ class UserModel {
   final String? wardNo;
   final String? houseNo;
   final String? profilePhoto;
+  final String? city;
+  final String? pincode;
 
   UserModel({
     required this.id,
@@ -21,6 +23,8 @@ class UserModel {
     this.wardNo,
     this.houseNo,
     this.profilePhoto,
+    this.city,
+    this.pincode,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -35,6 +39,8 @@ class UserModel {
       wardNo: json['ward_no'],
       houseNo: json['house_no'],
       profilePhoto: json['profile_photo'],
+      city: json['city'],
+      pincode: json['pincode'],
     );
   }
 }

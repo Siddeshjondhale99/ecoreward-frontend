@@ -21,6 +21,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late TextEditingController _addressController;
   late TextEditingController _wardController;
   late TextEditingController _houseController;
+  late TextEditingController _cityController;
+  late TextEditingController _pincodeController;
   String? _selectedPhotoUrl;
 
   final List<Map<String, String>> _predefinedAvatars = [
@@ -59,6 +61,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _addressController = TextEditingController(text: user?.address ?? '');
     _wardController = TextEditingController(text: user?.wardNo ?? '');
     _houseController = TextEditingController(text: user?.houseNo ?? '');
+    _cityController = TextEditingController(text: user?.city ?? '');
+    _pincodeController = TextEditingController(text: user?.pincode ?? '');
     _selectedPhotoUrl = user?.profilePhoto;
   }
 
@@ -69,6 +73,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _addressController.dispose();
     _wardController.dispose();
     _houseController.dispose();
+    _cityController.dispose();
+    _pincodeController.dispose();
     super.dispose();
   }
 
@@ -214,6 +220,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       wardNo: _wardController.text.trim(),
       houseNo: _houseController.text.trim(),
       profilePhoto: _selectedPhotoUrl,
+      city: _cityController.text.trim(),
+      pincode: _pincodeController.text.trim(),
     );
 
     if (success && mounted) {
@@ -241,6 +249,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _addressController.text = user.address ?? '';
       _wardController.text = user.wardNo ?? '';
       _houseController.text = user.houseNo ?? '';
+      _cityController.text = user.city ?? '';
+      _pincodeController.text = user.pincode ?? '';
       _selectedPhotoUrl = user.profilePhoto;
     }
 
@@ -312,6 +322,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const Divider(color: Colors.white10, height: 24),
                       _buildDetailRow(Icons.domain_rounded, 'Ward No.', user.wardNo ?? 'Not Set'),
                       const Divider(color: Colors.white10, height: 24),
+                      _buildDetailRow(Icons.location_city_rounded, 'City', user.city ?? 'Not Set'),
+                      const Divider(color: Colors.white10, height: 24),
+                      _buildDetailRow(Icons.pin_drop_rounded, 'Pincode', user.pincode ?? 'Not Set'),
+                      const Divider(color: Colors.white10, height: 24),
                       _buildDetailRow(Icons.location_on_rounded, 'Address', user.address ?? 'Not Set'),
                     ],
                   ),
@@ -375,6 +389,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildTextField(_houseController, 'HOUSE NUMBER', Icons.home_rounded),
                 const SizedBox(height: 16),
                 _buildTextField(_wardController, 'WARD NUMBER', Icons.domain_rounded),
+                const SizedBox(height: 16),
+                _buildTextField(_cityController, 'CITY', Icons.location_city_rounded),
+                const SizedBox(height: 16),
+                _buildTextField(_pincodeController, 'PINCODE', Icons.pin_drop_rounded, keyboardType: TextInputType.number),
                 const SizedBox(height: 16),
                 _buildTextField(_addressController, 'COMPLETE ADDRESS', Icons.location_on_rounded, maxLines: 2),
                 const SizedBox(height: 32),
