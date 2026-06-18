@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
+import '../../models/user_model.dart';
 
 class AdminProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
   
   int _totalUsers = 0;
+  List<UserModel> _allUsers = [];
   double _totalWasteCollected = 0.0;
   int _totalPointsAwarded = 0;
   Map<String, double> _categoryStats = {'plastic': 0.0, 'wet': 0.0, 'dry': 0.0};
@@ -16,8 +18,7 @@ class AdminProvider extends ChangeNotifier {
   }
 
   int get totalUsersCount => _totalUsers;
-  // To avoid breaking AdminDashboard which uses allUsers.length
-  List<dynamic> get allUsers => List.generate(_totalUsers, (_) => null); 
+  List<UserModel> get allUsers => _allUsers; 
   
   double get totalWasteCollected => _totalWasteCollected;
   int get totalPointsAwarded => _totalPointsAwarded;
@@ -42,6 +43,12 @@ class AdminProvider extends ChangeNotifier {
         final data = jsonDecode(analyticsResponse.body);
         final stats = data['waste_distribution'] as Map<String, dynamic>;
         _categoryStats = stats.map((key, value) => MapEntry(key, (value as num).toDouble()));
+      }
+
+      final usersResponse = await _apiService.get('/admin/users');
+      if (usersResponse.statusCode == 200) {
+        final List<dynamic> usersData = jsonDecode(usersResponse.body);
+        _allUsers = usersData.map((json) => UserModel.fromJson(json)).toList();
       }
     } catch (e) {
       debugPrint('Error fetching admin data: $e');
